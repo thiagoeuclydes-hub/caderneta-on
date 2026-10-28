@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atividades ON</title>
+    <style>
+        :root {
+            --bg-main: #001219;
+            --bg-side: #00252e;
+            --accent: #00afb9;
+            --fez-color: #2ecc71;
+            --nao-fez-color: #e74c3c;
+            --incompleto-color: #f1c40f;
+            --border-glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg-main); 
+            color: white; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        .sidebar { 
+            width: 180px; 
+            background: var(--bg-side); 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            border-right: 1px solid var(--border-glass);
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            width: 40px; height: 40px;
+            border: 2px solid var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; color: var(--accent);
+            font-size: 20px; border-radius: 5px;
+        }
+
+        .side-section-title {
+            color: #2ecc71; font-weight: 800; font-size: 0.75rem;
+            text-transform: uppercase; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .btn-turma-side {
+            width: 100%; background: transparent;
+            color: white; padding: 8px; border-radius: 8px; cursor: pointer;
+            margin-bottom: 8px; font-size: 0.8rem; transition: 0.3s;
+            text-align: left;
+            border: 1px solid var(--accent);
+        }
+
+        .btn-turma-side.active { background: var(--accent); color: #001219; font-weight: bold; }
+
+        input {
+            background: #001219; border: 1px solid #0a9396; color: white;
+            padding: 8px; width: calc(100% - 18px); border-radius: 8px; margin-bottom: 10px; font-size: 0.75rem;
+        }
+
+        /* Botão Salvar */
+        .btn-salvar {
+            background: #2ecc71;
+            border: none;
+            color: #001219;
+            padding: 10px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: 0.2s;
+        }
+        .btn-salvar:disabled {
+            background: #1a7a43;
+            color: rgba(0,0,0,0.4);
+            cursor: not-allowed;
+        }
+        .btn-salvar.pendente {
+            background: #f1c40f;
+            color: #001219;
+            animation: pulse 1.2s infinite;
+        }
+        .btn-salvar.erro {
+            background: #e74c3c;
+            color: white;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .badge-pendente {
+            background: #e74c3c;
+            color: white;
+            border-radius: 8px;
+            padding: 1px 5px;
+            font-size: 0.6rem;
+            font-weight: 900;
+            display: none;
+        }
+        .badge-pendente.visivel { display: inline; }
+
+        /* Main Content */
+        .main { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow: hidden; }
+
+        .header-top { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .bimestre-label { color: #00afb9; font-size: 1.2rem; font-weight: 900; }
+        
+        .bimestre-group { display: flex; gap: 8px; }
+        .btn-bim-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-glass);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-bim-select.active {
+            background: #2d5a4c;
+            border-color: #f1c40f;
+            color: #f1c40f;
+        }
+
+        .info-turma-ativa { 
+            margin-bottom: 10px; font-weight: bold; color: #94d2bd; font-size: 1.1rem; 
+            display: flex; align-items: center; gap: 15px;
+        }
+
+        .btn-edit-turma {
+            background: #f1c40f; color: #000; border: none; padding: 4px 10px;
+            border-radius: 5px; cursor: pointer; font-size: 0.7rem; font-weight: bold;
+        }
+
+        /* Table Area */
+        .table-container { 
+            flex: 1; overflow: auto; border: 1px solid var(--border-glass); border-radius: 5px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        table { border-collapse: collapse; width: 100%; min-width: 600px; }
+        th, td { border: 1px solid rgba(255,255,255,0.1); text-align: center; height: 40px; }
+
+        .nome-header { 
+            background: #002d36; color: #2ecc71; width: 220px; text-align: left; 
+            padding-left: 15px; font-size: 0.85rem; font-weight: bold;
+            position: sticky; left: 0; z-index: 5;
+        }
+
+        .ati-header { background: #001e26; font-size: 0.7rem; color: #94d2bd; min-width: 100px; }
+        .ati-desc { display: block; color: white; font-weight: bold; font-size: 0.75rem; }
+
+        /* Status Buttons */
+        .status-btn {
+            border: 2px solid rgba(0,0,0,0.3); border-radius: 4px; padding: 5px 12px;
+            font-size: 0.7rem; font-weight: 900; cursor: pointer; text-transform: uppercase;
+            min-width: 80px; transition: 0.2s;
+        }
+        .status-fez { background: var(--fez-color); color: black; }
+        .status-nao { background: var(--nao-fez-color); color: white; }
+        .status-inc { background: var(--incompleto-color); color: black; }
+        .status-empty { color: #555; background: transparent; border: 1px dashed #444; }
+
+        /* Destaque para célula com alteração não salva */
+        .status-btn.nao-salvo {
+            outline: 2px solid #f1c40f;
+            outline-offset: 2px;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 999;
+        }
+        #toast.show { opacity: 1; }
+        #toast.sucesso { background: #2ecc71; color: #001219; }
+        #toast.erro { background: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="sidebar">
+    <a href="index.html" class="back-btn">⬅</a>
+    <div>
+        <div class="side-section-title">ABRIR TURMA</div>
+        <div id="lista_botoes_turmas">Carregando...</div>
+    </div>
+    <div>
+        <div class="side-section-title">ADICIONAR ATIVIDADE</div>
+        <input type="date" id="data_ati">
+        <input type="text" id="desc_ati" placeholder="Ex.: Pag. 115">
+        <button class="btn-turma-side" style="background: var(--accent); color: #001219; text-align: center;" onclick="adicionarColunaAti()">ADICIONAR</button>
+    </div>
+    <div>
+        <div class="side-section-title">
+            SALVAR
+            <span class="badge-pendente" id="badge_pendente">0</span>
+        </div>
+        <button class="btn-salvar" id="btn_salvar" onclick="salvarTudo()">
+            💾 SALVAR TUDO
+        </button>
+    </div>
+</div>
+
+<div class="main">
+    <div class="header-top">
+        <span class="bimestre-label">Bimestre:</span>
+        <div class="bimestre-group">
+            <button class="btn-bim-select" id="btnBim1" onclick="mudarBimestre('1º')">1º</button>
+            <button class="btn-bim-select" id="btnBim2" onclick="mudarBimestre('2º')">2º</button>
+            <button class="btn-bim-select" id="btnBim3" onclick="mudarBimestre('3º')">3º</button>
+            <button class="btn-bim-select" id="btnBim4" onclick="mudarBimestre('4º')">4º</button>
+        </div>
+    </div>
+    <div id="info_turma" class="info-turma-ativa">Selecione uma turma</div>
+    <div class="table-container">
+        <table>
+            <thead id="head_ati"></thead>
+            <tbody id="body_ati"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwr0WCIzQKoTu4s_wA24062fIQcd0HqqF0obZUmA1UqOZkFL8h8NGt4S8QCHFVazLfJ/exec";
+    
+    let dadosBanco = { alunos: [], atividades: [] };
+    let turmaAtiva = "";
+    let bimestreAtivo = (localStorage.getItem('bimestre_selecionado') || "1º").trim();
+    let colunasLocais = new Set();
+
+    // Fila de alterações pendentes para salvar em lote
+    let filaParaSalvar = []; // { data, atividade, aluno, serie, turma, status, bimestre }
+
+    function mostrarToast(msg, tipo = 'sucesso') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `show ${tipo}`;
+        setTimeout(() => { t.className = ''; }, 3000);
+    }
+
+    function atualizarBotaoSalvar() {
+        const btn = document.getElementById('btn_salvar');
+        const badge = document.getElementById('badge_pendente');
+        const qtd = filaParaSalvar.length;
+
+        badge.textContent = qtd;
+        if (qtd > 0) {
+            badge.classList.add('visivel');
+            btn.classList.add('pendente');
+            btn.classList.remove('erro');
+            btn.disabled = false;
+        } else {
+            badge.classList.remove('visivel');
+            btn.classList.remove('pendente', 'erro');
+            btn.disabled = true;
+        }
+    }
+
+    async function salvarTudo() {
+        if (filaParaSalvar.length === 0) return;
+
+        const btn = document.getElementById('btn_salvar');
+        btn.textContent = '⏳ Salvando...';
+        btn.disabled = true;
+
+        let erros = 0;
+        const filaSnapshot = [...filaParaSalvar];
+
+        for (const item of filaSnapshot) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ tipo: "atividade", ...item })
+                });
+            } catch (e) {
+                erros++;
+            }
+        }
+
+        filaParaSalvar = [];
+
+        if (erros === 0) {
+            mostrarToast(`✅ ${filaSnapshot.length} registro(s) salvo(s)!`, 'sucesso');
+            btn.textContent = '✅ SALVO';
+            setTimeout(() => {
+                btn.textContent = '💾 SALVAR TUDO';
+                atualizarBotaoSalvar();
+            }, 2000);
+        } else {
+            mostrarToast(`⚠️ ${erros} erro(s) ao salvar. Tente novamente.`, 'erro');
+            btn.classList.add('erro');
+            btn.textContent = '❌ ERRO - TENTAR NOVAMENTE';
+            btn.disabled = false;
+        }
+
+        document.querySelectorAll('.status-btn.nao-salvo').forEach(b => b.classList.remove('nao-salvo'));
+    }
+
+    function atualizarInterfaceBimestre() {
+        document.querySelectorAll('.btn-bim-select').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText.trim() === bimestreAtivo) btn.classList.add('active');
+        });
+    }
+
+    function mudarBimestre(novoBim) {
+        if (filaParaSalvar.length > 0) {
+            if (!confirm(`Você tem ${filaParaSalvar.length} alteração(ões) não salva(s). Deseja trocar de bimestre sem salvar?`)) return;
+            filaParaSalvar = [];
+            atualizarBotaoSalvar();
+        }
+        bimestreAtivo = novoBim;
+        localStorage.setItem('bimestre_selecionado', novoBim);
+        atualizarInterfaceBimestre();
+        colunasLocais.clear();
+        montarTabela();
+    }
+
+    async function carregarDados() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const json = await res.json();
+            dadosBanco.alunos = json.alunos.filter(al => 
+                al[0] !== "TURMA CRIADA" && 
+                al[0] !== "NOME DO ALUNO" &&
+                !String(al[1]).toUpperCase().includes("SÉRIE")
+            );
+            dadosBanco.atividades = json.atividades || [];
+            renderizarBotoes();
+            atualizarInterfaceBimestre();
+        } catch(e) { console.error("Erro ao carregar dados"); }
+    }
+
+    function renderizarBotoes() {
+        const lista = document.getElementById('lista_botoes_turmas');
+        let turmasUnicas = [...new Set(dadosBanco.alunos.map(a => `${a[1]} | ${a[2]}`))]
+            .filter(t => !t.toUpperCase().includes("SÉRIE") && !t.toUpperCase().includes("TURMA"))
+            .sort();
+            
+        lista.innerHTML = turmasUnicas.map(t => `<button class="btn-turma-side ${turmaAtiva === t ? 'active' : ''}" onclick="selecionarTurma('${t}')">${t}</button>`).join('');
+    }
+
+    function selecionarTurma(t) {
+        if (filaParaSalvar.length > 0) {
+            if (!confirm(`Você tem ${filaParaSalvar.length} alteração(ões) não salva(s). Deseja trocar de turma sem salvar?`)) return;
+            filaParaSalvar = [];
+            atualizarBotaoSalvar();
+        }
+        turmaAtiva = t;
+        document.getElementById('info_turma').innerHTML = `
+            <span>TURMA: ${t}</span>
+            <button class="btn-edit-turma" onclick="editarTurma()">EDITAR NOME</button>
+        `;
+        renderizarBotoes();
+        montarTabela();
+    }
+
+    function editarTurma() {
+        if(!turmaAtiva) return;
+        const [serieAntiga, turmaAntiga] = turmaAtiva.split(' | ').map(s => s.trim());
+        
+        let novaSerie = prompt("Novo nome da SÉRIE:", serieAntiga);
+        if (novaSerie === null) return;
+        
+        let novaTurma = prompt("Novo nome da TURMA:", turmaAntiga);
+        if (novaTurma === null) return;
+
+        if(confirm(`Alterar de "${serieAntiga} | ${turmaAntiga}" para "${novaSerie} | ${novaTurma}"?`)) {
+            fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ 
+                    tipo: "editar_turma", 
+                    serieAntiga, turmaAntiga, novaSerie, novaTurma
+                }) 
+            }).then(() => {
+                alert("Turma renomeada com sucesso! Atualizando...");
+                location.reload();
+            });
+        }
+    }
+
+    function montarTabela() {
+        if(!turmaAtiva) return;
+        const [serie, turma] = turmaAtiva.split(' | ').map(s => s.trim());
+        const head = document.getElementById('head_ati');
+        const body = document.getElementById('body_ati');
+
+        let atiFiltradas = new Set();
+        dadosBanco.atividades.forEach(a => {
+            if(String(a[3]).trim() == serie && String(a[4]).trim() == turma && String(a[6]).trim() == bimestreAtivo) {
+                atiFiltradas.add(`${a[0].split('T')[0]}#${a[1]}`);
+            }
+        });
+        colunasLocais.forEach(c => atiFiltradas.add(c));
+        let colunas = Array.from(atiFiltradas).sort();
+
+        let htmlHead = `<tr><th class="nome-header">ALUNO</th>`;
+        colunas.forEach(c => {
+            let [d, desc] = c.split('#');
+            htmlHead += `<th class="ati-header"><span class="ati-desc">${desc}</span>${d.split('-').reverse().slice(0,2).join('/')}</th>`;
+        });
+        head.innerHTML = htmlHead + `</tr>`;
+
+        body.innerHTML = "";
+        const alunosFiltrados = dadosBanco.alunos
+            .filter(al => String(al[1]).trim() == serie && String(al[2]).trim() == turma)
+            .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+
+        alunosFiltrados.forEach(al => {
+            let nomeAl = al[0];
+            let linha = `<tr><td class="nome-header">${nomeAl}</td>`;
+            colunas.forEach(c => {
+                let [d, desc] = c.split('#');
+
+                // Verifica pendente na fila primeiro
+                let pendente = filaParaSalvar.slice().reverse().find(p =>
+                    p.aluno === nomeAl && p.data === d && p.atividade === desc && p.bimestre === bimestreAtivo
+                );
+
+                let reg = !pendente ? dadosBanco.atividades.find(at =>
+                    at[2] == nomeAl && at[0].split('T')[0] == d && at[1] == desc && at[6] == bimestreAtivo
+                ) : null;
+
+                let status = pendente ? pendente.status : (reg ? reg[5] : "");
+                let css = status === "FEZ" ? "status-fez" : (status === "NÃO FEZ" ? "status-nao" : (status === "INCOMPLETO" ? "status-inc" : "status-empty"));
+                let naoSalvoClass = pendente ? "nao-salvo" : "";
+                linha += `<td><button class="status-btn ${css} ${naoSalvoClass}" onclick="cicloAtividade('${nomeAl.replace(/'/g,"\\'")}','${c}','${status}')">${status || '...'}</button></td>`;
+            });
+            body.innerHTML += linha + `</tr>`;
+        });
+    }
+
+    function cicloAtividade(aluno, chave, atual) {
+        let proximo = { "": "FEZ", "FEZ": "NÃO FEZ", "NÃO FEZ": "INCOMPLETO", "INCOMPLETO": "" };
+        let novo = proximo[atual] ?? "FEZ";
+        let [d, desc] = chave.split('#');
+        const [serie, turma] = turmaAtiva.split(' | ').map(s => s.trim());
+
+        // ✅ UPSERT na fila de salvamento
+        let idxFila = filaParaSalvar.findIndex(p =>
+            p.aluno === aluno && p.data === d && p.atividade === desc && p.bimestre === bimestreAtivo
+        );
+        const novoItem = { data: d, atividade: desc, aluno, serie, turma, status: novo, bimestre: bimestreAtivo };
+        if (idxFila > -1) {
+            filaParaSalvar[idxFila] = novoItem;
+        } else {
+            filaParaSalvar.push(novoItem);
+        }
+
+        // ✅ UPSERT no banco local (sem duplicata)
+        let idx = dadosBanco.atividades.findIndex(at =>
+            at[2] == aluno && at[0].split('T')[0] == d && at[1] == desc && at[6] == bimestreAtivo
+        );
+        if(idx > -1) {
+            dadosBanco.atividades[idx][5] = novo;
+        } else {
+            dadosBanco.atividades.push([d, desc, aluno, serie, turma, novo, bimestreAtivo]);
+        }
+
+        atualizarBotaoSalvar();
+        montarTabela();
+    }
+
+    function adicionarColunaAti() {
+        const d = document.getElementById('data_ati').value;
+        const a = document.getElementById('desc_ati').value;
+        if(!d || !a || !turmaAtiva) return alert("Preencha data, descrição e selecione a turma!");
+        colunasLocais.add(`${d}#${a}`);
+        montarTabela();
+    }
+
+    // Avisa ao sair com pendências
+    window.addEventListener('beforeunload', function(e) {
+        if (filaParaSalvar.length > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    window.onload = () => {
+        carregarDados();
+        atualizarBotaoSalvar();
+    };
+</script>
+</body>
+</html>

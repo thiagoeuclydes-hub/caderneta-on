@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequência ON - Ultra Fit</title>
+    <style>
+        :root {
+            --bg-main: #001219;
+            --bg-side: #001e26;
+            --accent: #00afb9;
+            --p-color: #2ecc71;
+            --f-color: #e74c3c;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: var(--bg-main); 
+            color: white; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            font-size: 9px; 
+        }
+
+        .sidebar { 
+            width: 130px; 
+            background: var(--bg-side); 
+            padding: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            border-right: 1px solid rgba(0, 175, 185, 0.2); 
+            flex-shrink: 0;
+        }
+
+        .back-circle { 
+            width: 28px; height: 28px; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 4px; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; border: 1px solid var(--accent); 
+            text-decoration: none; font-size: 14px; color: #ffff00; 
+        }
+
+        .card-side { background: rgba(0, 45, 54, 0.4); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
+        .card-title { color: var(--accent); font-weight: 800; font-size: 0.55rem; margin-bottom: 5px; text-transform: uppercase; }
+
+        .btn-turma-side { 
+            width: 100%; background: transparent; border: 1px solid transparent; 
+            color: #94d2bd; padding: 4px 6px; border-radius: 4px; cursor: pointer; 
+            margin-bottom: 2px; text-align: left; font-size: 0.65rem; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .btn-turma-side.active { background: var(--accent); color: var(--bg-main); font-weight: bold; }
+
+        input, select { 
+            background: #001219; border: 1px solid #0a9396; color: white; 
+            padding: 3px; width: 100%; border-radius: 3px; margin-bottom: 5px; font-size: 0.65rem; 
+        }
+
+        .btn-add { 
+            background: var(--accent); border: none; color: var(--bg-main); 
+            padding: 5px; width: 100%; border-radius: 4px; font-weight: 800; 
+            cursor: pointer; text-transform: uppercase; font-size: 0.6rem; 
+        }
+
+        /* Botão Salvar */
+        .btn-salvar {
+            background: #2ecc71;
+            border: none;
+            color: #001219;
+            padding: 7px;
+            width: 100%;
+            border-radius: 4px;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: 0.2s;
+            position: relative;
+        }
+        .btn-salvar:disabled {
+            background: #1a7a43;
+            color: rgba(0,0,0,0.5);
+            cursor: not-allowed;
+        }
+        .btn-salvar.pendente {
+            background: #f1c40f;
+            color: #001219;
+            animation: pulse 1.2s infinite;
+        }
+        .btn-salvar.erro {
+            background: #e74c3c;
+            color: white;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Badge de itens pendentes */
+        .badge-pendente {
+            background: #e74c3c;
+            color: white;
+            border-radius: 8px;
+            padding: 1px 5px;
+            font-size: 0.6rem;
+            font-weight: 900;
+            display: none;
+        }
+        .badge-pendente.visivel { display: inline; }
+
+        .main { flex: 1; padding: 5px; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .info-topo { 
+            color: #94d2bd; font-weight: 800; margin-bottom: 5px; font-size: 0.8rem; 
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.03); padding: 5px; 
+            border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .btn-edit-turma {
+            background: #f1c40f; color: #000; border: none; padding: 2px 6px;
+            border-radius: 3px; cursor: pointer; font-size: 0.6rem; font-weight: bold;
+        }
+
+        .table-container { 
+            flex: 1; overflow: auto; border-radius: 4px; border: 1px solid rgba(0, 175, 185, 0.2); 
+        }
+        
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        th, td { border: 1px solid rgba(255,255,255,0.03); text-align: center; height: 22px; }
+        
+        .nome-header { 
+            background: #002d36; color: var(--accent); width: 110px; text-align: left; 
+            padding-left: 5px; position: sticky; left: 0; z-index: 5; 
+            font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .data-header { font-size: 0.5rem; width: 28px; background: #001e26; color: #94d2bd; line-height: 1; }
+        .aula-texto { display: block; font-weight: 800; color: #fff; }
+        .btn-all {
+            display: block; margin: 2px auto 0; padding: 1px 3px; width: 22px;
+            font-size: 0.45rem; font-weight: 800; line-height: 1.2;
+            background: transparent; color: var(--accent);
+            border: 1px solid var(--accent); border-radius: 3px; cursor: pointer;
+        }
+        .btn-all:hover { background: var(--accent); color: var(--bg-main); }
+        .faltas-header { width: 30px; background: #002d36; color: #fff; font-size: 0.65rem; }
+
+        .cell-presenca span { 
+            display: flex; align-items: center; justify-content: center; 
+            width: 16px; height: 16px; margin: 0 auto; border-radius: 3px; 
+            font-weight: 900; font-size: 0.75rem; 
+        }
+
+        .p-box { background: var(--p-color) !important; color: #001219 !important; }
+        .f-box { background: var(--f-color) !important; color: white !important; }
+        /* Célula com alteração ainda não salva */
+        .cell-presenca.nao-salvo span {
+            outline: 2px solid #f1c40f;
+            outline-offset: 1px;
+        }
+        .faltas-col { color: var(--f-color); font-weight: 900; font-size: 0.8rem; }
+
+        tr:nth-child(even) { background: rgba(255,255,255,0.01); }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        /* Toast de notificação */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 999;
+        }
+        #toast.show { opacity: 1; }
+        #toast.sucesso { background: #2ecc71; color: #001219; }
+        #toast.erro { background: #e74c3c; }
+        #toast.aviso { background: #f1c40f; color: #001219; }
+    </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="sidebar">
+    <a href="index.html" class="back-circle">⬅</a>
+    <div class="card-side">
+        <div class="card-title">Turmas</div>
+        <div id="lista_botoes_turmas" style="max-height: 200px; overflow-y: auto;">...</div>
+    </div>
+    <div class="card-side">
+        <div class="card-title">Nova Aula</div>
+        <input type="date" id="data_nova">
+        <select id="aula_nova">
+            <option value="1ª Aula">1ª</option>
+            <option value="2ª Aula">2ª</option>
+            <option value="3ª Aula">3ª</option>
+            <option value="4ª Aula">4ª</option>
+        </select>
+        <button class="btn-add" onclick="adicionarColuna()">ADD</button>
+    </div>
+    <div class="card-side">
+        <div class="card-title">
+            Salvar
+            <span class="badge-pendente" id="badge_pendente">0</span>
+        </div>
+        <button class="btn-salvar" id="btn_salvar" onclick="salvarTudo()">
+            💾 SALVAR TUDO
+        </button>
+    </div>
+</div>
+
+<div class="main">
+    <div id="info_selecao" class="info-topo">Selecione uma turma</div>
+    <div class="table-container">
+        <table>
+            <thead id="head_freq"></thead>
+            <tbody id="body_freq"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5YNSxfjrQ92rCpSYEN-pjdpV9sl9JbdCqqSCl2j8-Q5wSuOWh24DZ9z9qTOzPmD3C/exec";
+    let dadosBanco = { alunos: [], frequencia: [] };
+    let turmaAtiva = "";
+    let bimestreAtivo = (localStorage.getItem('bimestre_selecionado') || "1º").trim();
+    let colunasLocais = new Set();
+
+    // Fila de alterações pendentes para salvar em lote
+    let filaParaSalvar = []; // { data, aula, aluno, serie, turma, status, bimestre }
+
+    function formatarDataSimples(d) {
+        if (!d) return "";
+        let s = d.toString();
+        return s.includes('T') ? s.split('T')[0] : s.split(' ')[0];
+    }
+
+    function mostrarToast(msg, tipo = 'sucesso') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `show ${tipo}`;
+        setTimeout(() => { t.className = ''; }, 3000);
+    }
+
+    function atualizarBotaoSalvar() {
+        const btn = document.getElementById('btn_salvar');
+        const badge = document.getElementById('badge_pendente');
+        const qtd = filaParaSalvar.length;
+
+        badge.textContent = qtd;
+        if (qtd > 0) {
+            badge.classList.add('visivel');
+            btn.classList.add('pendente');
+            btn.classList.remove('erro');
+            btn.disabled = false;
+        } else {
+            badge.classList.remove('visivel');
+            btn.classList.remove('pendente', 'erro');
+            btn.disabled = true;
+        }
+    }
+
+    async function salvarTudo() {
+        if (filaParaSalvar.length === 0) return;
+
+        const btn = document.getElementById('btn_salvar');
+        btn.textContent = '⏳ Salvando...';
+        btn.disabled = true;
+
+        // Salva cada item da fila sequencialmente
+        let erros = 0;
+        const filaSnapshot = [...filaParaSalvar];
+
+        for (const item of filaSnapshot) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ tipo: "frequencia", ...item })
+                });
+            } catch (e) {
+                erros++;
+            }
+        }
+
+        filaParaSalvar = [];
+
+        if (erros === 0) {
+            mostrarToast(`✅ ${filaSnapshot.length} registro(s) salvo(s) com sucesso!`, 'sucesso');
+            btn.textContent = '✅ SALVO';
+            setTimeout(() => {
+                btn.textContent = '💾 SALVAR TUDO';
+                atualizarBotaoSalvar();
+            }, 2000);
+        } else {
+            mostrarToast(`⚠️ ${erros} erro(s) ao salvar. Tente novamente.`, 'erro');
+            btn.classList.add('erro');
+            btn.textContent = '❌ ERRO - TENTAR NOVAMENTE';
+            btn.disabled = false;
+        }
+
+        // Remover marcação visual de "não salvo"
+        document.querySelectorAll('.cell-presenca.nao-salvo').forEach(c => c.classList.remove('nao-salvo'));
+    }
+
+    async function carregar() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const json = await res.json();
+            dadosBanco.alunos = (json.alunos || []).filter(al => 
+                al[0] && 
+                al[0].trim() !== "" && 
+                al[0].trim() !== "TURMA CRIADA" && 
+                al[0].trim() !== "NOME DO ALUNO"
+            );
+            dadosBanco.frequencia = json.frequencia || [];
+            renderizarBotoes();
+            if(turmaAtiva) montarTabela();
+        } catch(e) { console.log("Erro de carga"); }
+    }
+
+    function renderizarBotoes() {
+        const listaBtn = document.getElementById('lista_botoes_turmas');
+        let turmasUnicas = [...new Set(dadosBanco.alunos.map(a => `${a[1]} | ${a[2]}`))]
+            .filter(t => !t.toUpperCase().includes("SÉRIE") && !t.toUpperCase().includes("TURMA"))
+            .sort();
+
+        listaBtn.innerHTML = turmasUnicas.map(t => {
+            let active = (turmaAtiva === t) ? 'active' : '';
+            return `<button class="btn-turma-side ${active}" onclick="selecionarTurma('${t}')">${t}</button>`;
+        }).join('');
+    }
+
+    function selecionarTurma(t) {
+        // Avisa se há pendências ao trocar de turma
+        if (filaParaSalvar.length > 0) {
+            if (!confirm(`Você tem ${filaParaSalvar.length} alteração(ões) não salva(s). Deseja trocar de turma sem salvar?`)) {
+                return;
+            }
+            filaParaSalvar = [];
+            atualizarBotaoSalvar();
+        }
+        turmaAtiva = t;
+        colunasLocais.clear();
+        document.getElementById('info_selecao').innerHTML = `
+            <span>${bimestreAtivo} BIM - ${t}</span>
+            <button class="btn-edit-turma" onclick="editarTurma()">EDITAR NOME</button>
+        `;
+        renderizarBotoes();
+        montarTabela();
+    }
+
+    function editarTurma() {
+        if(!turmaAtiva) return;
+        const [serieAntiga, turmaAntiga] = turmaAtiva.split(' | ').map(s => s.trim());
+        
+        let novaSerie = prompt("Novo nome da SÉRIE:", serieAntiga);
+        if (novaSerie === null) return;
+        
+        let novaTurma = prompt("Novo nome da TURMA:", turmaAntiga);
+        if (novaTurma === null) return;
+
+        if(confirm(`Alterar de "${serieAntiga} | ${turmaAntiga}" para "${novaSerie} | ${novaTurma}"?`)) {
+            fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ 
+                    tipo: "editar_turma", 
+                    serieAntiga: serieAntiga, 
+                    turmaAntiga: turmaAntiga,
+                    novaSerie: novaSerie,
+                    novaTurma: novaTurma
+                }) 
+            }).then(() => {
+                alert("Turma renomeada! A página será atualizada.");
+                location.reload();
+            });
+        }
+    }
+
+    function montarTabela() {
+        if(!turmaAtiva) return;
+        const [serie, turma] = turmaAtiva.split(' | ').map(s => s.trim());
+        const head = document.getElementById('head_freq');
+        const body = document.getElementById('body_freq');
+        
+        let setAulasReais = new Set();
+        dadosBanco.frequencia.forEach(f => {
+            if (String(f[3]).trim() == serie && String(f[4]).trim() == turma && String(f[6]).trim() == bimestreAtivo) {
+                setAulasReais.add(`${formatarDataSimples(f[0])} ${String(f[1]).trim()}`);
+            }
+        });
+        colunasLocais.forEach(c => setAulasReais.add(c));
+        let listaAulasSorted = Array.from(setAulasReais).sort();
+
+        let htmlHead = `<tr><th class="nome-header">ALUNOS</th>`;
+        listaAulasSorted.forEach((chave, i) => {
+            if (i < 25) {
+                let [dt, ...rest] = chave.split(' ');
+                let dtBr = dt.split('-').reverse().slice(0,2).join('/');
+                htmlHead += `<th class="data-header"><span class="aula-texto">${rest.join(' ').replace(/\D/g,'')}º</span>${dtBr}<button class="btn-all" title="Marcar todos como presentes (clique de novo para limpar)" onclick="marcarTodos('${chave}')">ALL</button></th>`;
+            }
+        });
+        for(let i=listaAulasSorted.length; i<25; i++) htmlHead += `<th class="data-header" style="color:rgba(255,255,255,0.02)">--</th>`;
+        htmlHead += `<th class="faltas-header">F</th></tr>`;
+        head.innerHTML = htmlHead;
+
+        body.innerHTML = "";
+        const alunosFiltrados = dadosBanco.alunos
+            .filter(al => String(al[1]).trim() == serie && String(al[2]).trim() == turma)
+            .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+
+        alunosFiltrados.forEach(al => {
+            let totalF = 0;
+            let nomeAl = String(al[0]).trim();
+            let linha = `<tr><td class="nome-header">${nomeAl}</td>`;
+            for(let i=0; i < 25; i++) {
+                let chave = listaAulasSorted[i];
+                if(chave) {
+                    let [cData, ...cRest] = chave.split(' ');
+                    let cAula = cRest.join(' ').trim();
+
+                    // Busca o último registro salvo no banco (sem duplicata visual)
+                    let registro = [...dadosBanco.frequencia].reverse().find(f => 
+                        String(f[2]).trim().toUpperCase() === nomeAl.toUpperCase() &&
+                        formatarDataSimples(f[0]) === cData &&
+                        String(f[1]).trim().toUpperCase() === cAula.toUpperCase() &&
+                        String(f[6]).trim() === bimestreAtivo
+                    );
+
+                    // Verifica se há alteração pendente na fila (sobrepõe o banco local)
+                    let pendente = filaParaSalvar.slice().reverse().find(p =>
+                        p.aluno === nomeAl && p.data === cData && p.aula === cAula && p.bimestre === bimestreAtivo
+                    );
+
+                    let status = pendente ? pendente.status : (registro ? String(registro[5]).trim().toUpperCase() : "");
+                    if(status === "F") totalF++;
+                    let classe = status === "P" ? "p-box" : (status === "F" ? "f-box" : "");
+                    let naoSalvoClass = pendente ? "nao-salvo" : "";
+                    linha += `<td class="cell-presenca ${naoSalvoClass}" onclick="cicloFrequencia('${nomeAl.replace(/'/g, "\\'")}','${chave}','${status}')"><span class="${classe}">${status}</span></td>`;
+                } else { linha += `<td></td>`; }
+            }
+            linha += `<td class="faltas-col">${totalF}</td></tr>`;
+            body.innerHTML += linha;
+        });
+    }
+
+    // Aplica um status a um aluno/aula (fila + banco local), sem redesenhar a tabela
+    function aplicarStatus(aluno, chave, novo) {
+        const [vData, ...rest] = chave.split(' ');
+        const vAula = rest.join(' ').trim();
+        const [serie, turma] = turmaAtiva.split(' | ').map(s => s.trim());
+
+        // ✅ UPSERT LOCAL: atualiza se já existe na fila, senão adiciona
+        let idxFila = filaParaSalvar.findIndex(p =>
+            p.aluno === aluno && p.data === vData && p.aula === vAula && p.bimestre === bimestreAtivo
+        );
+        const novoItem = { data: vData, aula: vAula, aluno, serie, turma, status: novo, bimestre: bimestreAtivo };
+        if (idxFila > -1) {
+            filaParaSalvar[idxFila] = novoItem;
+        } else {
+            filaParaSalvar.push(novoItem);
+        }
+
+        // ✅ UPSERT no banco local (sem duplicata)
+        let idxBanco = dadosBanco.frequencia.findIndex(f =>
+            String(f[2]).trim().toUpperCase() === aluno.toUpperCase() &&
+            formatarDataSimples(f[0]) === vData &&
+            String(f[1]).trim().toUpperCase() === vAula.toUpperCase() &&
+            String(f[6]).trim() === bimestreAtivo
+        );
+        if (idxBanco > -1) {
+            dadosBanco.frequencia[idxBanco][5] = novo;
+        } else {
+            dadosBanco.frequencia.push([vData, vAula, aluno, serie, turma, novo, bimestreAtivo]);
+        }
+    }
+
+    function cicloFrequencia(aluno, chave, atual) {
+        let novo = (atual === "") ? "P" : (atual === "P" ? "F" : "");
+        aplicarStatus(aluno, chave, novo);
+        atualizarBotaoSalvar();
+        montarTabela();
+    }
+
+    // Botão ALL: marca todos os alunos da coluna como P.
+    // Se todos já estiverem como P, limpa a coluna inteira.
+    function marcarTodos(chave) {
+        if (!turmaAtiva) return;
+        const [serie, turma] = turmaAtiva.split(' | ').map(s => s.trim());
+        const [vData, ...rest] = chave.split(' ');
+        const vAula = rest.join(' ').trim();
+
+        const alunos = dadosBanco.alunos
+            .filter(al => String(al[1]).trim() == serie && String(al[2]).trim() == turma)
+            .map(al => String(al[0]).trim());
+
+        const statusDe = (nome) => {
+            let pend = filaParaSalvar.slice().reverse().find(p =>
+                p.aluno === nome && p.data === vData && p.aula === vAula && p.bimestre === bimestreAtivo
+            );
+            if (pend) return pend.status;
+            let reg = [...dadosBanco.frequencia].reverse().find(f =>
+                String(f[2]).trim().toUpperCase() === nome.toUpperCase() &&
+                formatarDataSimples(f[0]) === vData &&
+                String(f[1]).trim().toUpperCase() === vAula.toUpperCase() &&
+                String(f[6]).trim() === bimestreAtivo
+            );
+            return reg ? String(reg[5]).trim().toUpperCase() : "";
+        };
+
+        const todosPresentes = alunos.length > 0 && alunos.every(n => statusDe(n) === "P");
+        const novo = todosPresentes ? "" : "P";
+
+        alunos.forEach(nome => {
+            if (statusDe(nome) !== novo) aplicarStatus(nome, chave, novo);
+        });
+
+        atualizarBotaoSalvar();
+        montarTabela();
+    }
+
+    function adicionarColuna() {
+        const d = document.getElementById('data_nova').value;
+        const a = document.getElementById('aula_nova').value;
+        if(!d || !turmaAtiva) return;
+        colunasLocais.add(`${d} ${a}`);
+        montarTabela();
+    }
+
+    // Avisa ao sair com pendências
+    window.addEventListener('beforeunload', function(e) {
+        if (filaParaSalvar.length > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    window.onload = () => {
+        carregar();
+        atualizarBotaoSalvar();
+    };
+</script>
+</body>
+</html>

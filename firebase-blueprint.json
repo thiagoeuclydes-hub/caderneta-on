@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "class": {
+      "title": "Class",
+      "description": "A school class consisting of a series and a name.",
+      "type": "object",
+      "properties": {
+        "serie": { "type": "string", "description": "The grade or series (e.g., 1ª Série)." },
+        "name": { "type": "string", "description": "The class name (e.g., Turma A)." },
+        "ownerId": { "type": "string", "description": "UID of the teacher who owns this class." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["serie", "name", "ownerId", "createdAt"]
+    },
+    "student": {
+      "title": "Student",
+      "description": "A student enrolled in a class.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the student." },
+        "classId": { "type": "string", "description": "Reference to the class document ID." },
+        "ownerId": { "type": "string", "description": "UID of the teacher." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "classId", "ownerId", "createdAt"]
+    },
+    "attendance": {
+      "title": "Attendance",
+      "description": "Attendance record for a student on a specific date and lesson.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "Reference to the student document ID." },
+        "classId": { "type": "string", "description": "Reference to the class document ID." },
+        "date": { "type": "string", "format": "date", "description": "Date of the lesson (YYYY-MM-DD)." },
+        "lesson": { "type": "string", "description": "Lesson identifier (e.g., 1ª Aula)." },
+        "status": { "type": "string", "enum": ["P", "F", ""], "description": "P for Present, F for Absent." },
+        "bimester": { "type": "string", "enum": ["1º", "2º", "3º", "4º"], "description": "The bimester period." },
+        "ownerId": { "type": "string", "description": "UID of the teacher." },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "classId", "date", "lesson", "status", "bimester", "ownerId", "updatedAt"]
+    },
+    "activity": {
+      "title": "Activity",
+      "description": "Activity record (homework, classwork) for a student.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "Reference to the student document ID." },
+        "classId": { "type": "string", "description": "Reference to the class document ID." },
+        "date": { "type": "string", "format": "date", "description": "Date of the activity (YYYY-MM-DD)." },
+        "description": { "type": "string", "description": "Description of the activity (e.g., Pag. 115)." },
+        "status": { "type": "string", "enum": ["FEZ", "NÃO FEZ", "INCOMPLETO", ""], "description": "Completion status." },
+        "bimester": { "type": "string", "enum": ["1º", "2º", "3º", "4º"], "description": "The bimester period." },
+        "ownerId": { "type": "string", "description": "UID of the teacher." },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "classId", "date", "description", "status", "bimester", "ownerId", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "classes/{classId}": {
+      "schema": "class",
+      "description": "Collection of school classes."
+    },
+    "students/{studentId}": {
+      "schema": "student",
+      "description": "Collection of students."
+    },
+    "attendance/{attendanceId}": {
+      "schema": "attendance",
+      "description": "Attendance logs."
+    },
+    "activities/{activityId}": {
+      "schema": "activity",
+      "description": "Activity completion logs."
+    }
+  }
+}

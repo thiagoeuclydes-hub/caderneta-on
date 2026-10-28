@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - CADERNETA ON</title>
+    <style>
+        :root {
+            --bg-color: #001219;
+            --card-bg: rgba(0, 30, 38, 0.7);
+            --accent-cyan: #00afb9;
+            --accent-mint: #94d2bd;
+            --danger: #ae2012;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background: radial-gradient(circle at bottom left, #002d36, #001219); 
+            color: white; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px;
+        }
+
+        .header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            max-width: 1100px; 
+            margin-bottom: 40px; 
+            position: relative; 
+        }
+
+        .back-btn { 
+            background: var(--card-bg); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            color: #ffff00; 
+            font-size: 24px; 
+            cursor: pointer; 
+            position: absolute; 
+            left: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-decoration: none; 
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .back-btn:hover { background: var(--accent-cyan); color: var(--bg-color); transform: scale(1.1); }
+
+        .title-banner { 
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 15px 50px; 
+            border-radius: 50px; 
+            text-align: center; 
+            font-weight: 800; 
+            font-size: 1.4rem; 
+            border: 1px solid var(--glass-border); 
+            letter-spacing: 2px;
+            color: var(--accent-cyan);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .content { 
+            display: grid; 
+            grid-template-columns: 1fr 1.5fr; 
+            gap: 25px; 
+            width: 100%; 
+            max-width: 1100px; 
+            margin-bottom: 40px;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: 20px; 
+            border: 1px solid var(--glass-border); 
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .card-label { 
+            color: var(--accent-mint); 
+            font-weight: 800; 
+            margin-bottom: 25px; 
+            font-size: 0.75rem; 
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-label::before { content: ''; width: 4px; height: 15px; background: var(--accent-cyan); border-radius: 2px; }
+
+        input, textarea, select { 
+            background: rgba(0, 45, 54, 0.5); 
+            border: 1px solid var(--glass-border); 
+            color: white; 
+            padding: 14px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 15px; 
+            border-radius: 12px; 
+            font-size: 0.95rem; 
+            transition: 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus { 
+            border-color: var(--accent-cyan); 
+            outline: none; 
+            background: rgba(0, 45, 54, 0.8); 
+        }
+
+        .btn-action { 
+            background: var(--accent-cyan); 
+            border: none; 
+            padding: 16px; 
+            color: var(--bg-color); 
+            font-weight: 800; 
+            width: 100%; 
+            cursor: pointer; 
+            border-radius: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 175, 185, 0.4); filter: brightness(1.1); }
+
+        .table-container { 
+            width: 100%; 
+            max-width: 1100px; 
+            background: var(--card-bg); 
+            border-radius: 20px; 
+            overflow: hidden; 
+            border: 1px solid var(--glass-border);
+        }
+
+        .table-cadastrados { width: 100%; border-collapse: collapse; }
+        
+        .header-turma { 
+            background: linear-gradient(90deg, #005f73, #0a9396); 
+            color: #ffff00; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .table-cadastrados td { padding: 18px; border-bottom: 1px solid var(--glass-border); }
+
+        .btn-del { 
+            background: rgba(231, 76, 60, 0.1); 
+            border: none; 
+            color: #e74c3c; 
+            padding: 8px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+
+        .btn-del:hover { background: #e74c3c; color: white; }
+
+        .btn-del-turma { 
+            background: var(--danger); 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 0.7rem; 
+            float: right; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-del-turma:hover { filter: brightness(1.3); transform: scale(1.05); }
+
+        @media (max-width: 850px) {
+            .content { grid-template-columns: 1fr; }
+            .title-banner { font-size: 1.1rem; padding: 12px 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="index.html" class="back-btn">⬅</a>
+        <div class="title-banner">GESTÃO DE TURMAS</div>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <div class="card-label">Nova Unidade</div>
+            <input type="text" id="serie_turma" placeholder="Ex: 1ª Série">
+            <input type="text" id="nome_turma" placeholder="Ex: Turma A">
+            <button class="btn-action" onclick="enviarDados('turma')">Criar Turma</button>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Matricular Alunos</div>
+            <textarea id="lista_alunos" placeholder="Cole os nomes dos alunos aqui (um por linha)..." rows="4"></textarea>
+            <div style="display: flex; gap: 12px;">
+                <select id="sel_serie"><option value="">Série...</option></select>
+                <select id="sel_turma"><option value="">Turma...</option></select>
+            </div>
+            <button class="btn-action" onclick="enviarDados('alunos')">Confirmar Matrícula</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table-cadastrados">
+            <tbody id="corpo_tabela"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_H9B-eP4Vb6dx17TbUPN_FLBPPLXnLuArU4oiP9XKPt1p5KXdBUx85TaDgJDxnfKf/exec";
+        
+        function enviarDados(tipo) {
+            let dados = tipo === 'turma' ? 
+                { serie: document.getElementById('serie_turma').value, turma: document.getElementById('nome_turma').value } : 
+                { alunos: document.getElementById('lista_alunos').value, serie: document.getElementById('sel_serie').value, turma: document.getElementById('sel_turma').value };
+            
+            if(!dados.serie || !dados.turma) return alert("Erro: Preencha os campos de Série e Turma!");
+            
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados) })
+                .then(() => { alert("Dados salvos com sucesso!"); location.reload(); });
+        }
+
+        async function atualizarTabela() {
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const json = await res.json();
+                const tbody = document.getElementById('corpo_tabela');
+                const selS = document.getElementById('sel_serie');
+                const selT = document.getElementById('sel_turma');
+                
+                tbody.innerHTML = "";
+                let series = new Set(), turmas = new Set(), agrupados = {};
+
+                json.alunos.forEach((linha, i) => {
+                    if(i === 0 || !linha[1]) return;
+                    let chave = `${linha[1]} - ${linha[2]}`;
+                    if(!agrupados[chave]) agrupados[chave] = [];
+                    if(linha[0] !== "TURMA CRIADA") agrupados[chave].push({nome: linha[0], s: linha[1], t: linha[2]});
+                    series.add(linha[1]); turmas.add(linha[2]);
+                });
+
+                // Ordenar as turmas (chaves) em ordem alfabética
+                const turmasOrdenadas = Object.keys(agrupados).sort();
+
+                for (let chaveID of turmasOrdenadas) {
+                    let [s, t] = chaveID.split(' - ');
+                    tbody.innerHTML += `
+                        <tr class="header-turma">
+                            <td colspan="2">
+                                📍 ${chaveID} 
+                                <button class="btn-del-turma" onclick="excluirTurma('${s}','${t}')">Encerrar Turma</button>
+                            </td>
+                        </tr>`;
+                    
+                    // Alunos já estão sendo ordenados aqui
+                    agrupados[chaveID].sort((a,b) => a.nome.localeCompare(b.nome)).forEach(aluno => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${aluno.nome}</td>
+                                <td style="text-align:right;">
+                                    <button class="btn-del" onclick="excluirAluno('${aluno.nome}','${aluno.s}','${aluno.t}')">🗑️</button>
+                                </td>
+                            </tr>`;
+                    });
+                }
+
+                selS.innerHTML = '<option value="">Série...</option>'; 
+                selT.innerHTML = '<option value="">Turma...</option>';
+                Array.from(series).sort().forEach(s => selS.innerHTML += `<option value="${s}">${s}</option>`);
+                Array.from(turmas).sort().forEach(t => selT.innerHTML += `<option value="${t}">${t}</option>`);
+            } catch (e) { console.error("Erro na carga:", e); }
+        }
+
+        function excluirAluno(n, s, t) { if(confirm(`Remover ${n}?`)) fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({tipo:"excluir_aluno", aluno:n, serie:s, turma:t}) }).then(() => location.reload()); }
+        function excluirTurma(s, t) { if(confirm(`CUIDADO: Isso excluirá todos os alunos da turma ${s} ${t}. Continuar?`)) fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({tipo:"excluir_turma", serie:s, turma:t}) }).then(() => location.reload()); }
+        
+        window.onload = atualizarTabela;
+    </script>
+</body>
+</html>
