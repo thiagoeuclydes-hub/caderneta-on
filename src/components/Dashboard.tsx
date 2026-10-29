@@ -1,5 +1,8 @@
+import React from 'react';
+import { motion } from 'motion/react';
 import { GraduationCap, Users, ClipboardCheck, ListTodo, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
