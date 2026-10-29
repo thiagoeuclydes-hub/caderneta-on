@@ -1,33 +1,16 @@
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default deny
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Manual access for single-user mode
-    function isThiago(data) {
-      return data.ownerId == 'thiagorocha';
-    }
-
-    // Classes
-    match /classes/{classId} {
-      allow read, write: if isThiago(request.resource.data) || isThiago(resource.data);
-    }
-
-    // Students
-    match /students/{studentId} {
-      allow read, write: if isThiago(request.resource.data) || isThiago(resource.data);
-    }
-
-    // Attendance
-    match /attendance/{attendanceId} {
-      allow read, write: if isThiago(request.resource.data) || isThiago(resource.data);
-    }
-
-    // Activities
-    match /activities/{activityId} {
-      allow read, write: if isThiago(request.resource.data) || isThiago(resource.data);
+    match /{collection}/{id} {
+      // Allow read/delete/update if the existing document belongs to 'thiagorocha'
+      allow read, delete, update: if resource != null && resource.data.ownerId == 'thiagorocha';
+      
+      // Allow create if the new document is being assigned to 'thiagorocha'
+      allow create: if request.resource.data.ownerId == 'thiagorocha';
     }
   }
 }

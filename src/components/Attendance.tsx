@@ -24,6 +24,7 @@ export const AttendanceView: React.FC = () => {
     const q = query(collection(db, 'classes'), where('ownerId', '==', user.uid));
     const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      data.sort((a: any, b: any) => a.serie.localeCompare(b.serie) || a.name.localeCompare(b.name));
       setClasses(data);
       if (data.length > 0 && !selectedClassId) setSelectedClassId(data[0].id);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'classes'));
