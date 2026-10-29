@@ -19,7 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({
   isDarkMode, 
   toggleDarkMode 
 }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Início', icon: LayoutDashboard },
@@ -65,13 +65,13 @@ export const Layout: React.FC<LayoutProps> = ({
           </button>
 
           <div className="flex items-center gap-3 px-4 py-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-xs">
-              {user?.displayName?.charAt(0) || user?.email?.charAt(0) || '?'}
+            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-xs text-center">
+              {user?.displayName?.charAt(0) || '?'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate">{user?.displayName || 'Professor'}</p>
               <button
-                onClick={() => signOut(auth)}
+                onClick={logout}
                 className="text-[10px] text-red-500 hover:text-red-600 font-bold flex items-center gap-1 uppercase tracking-tighter"
               >
                 <LogOut size={10} /> Sair
