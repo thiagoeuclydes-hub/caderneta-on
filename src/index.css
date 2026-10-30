@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -6,7 +7,7 @@
 
 @layer base {
   body {
-    @apply font-sans;
+    @apply font-sans bg-slate-50 dark:bg-slate-950 transition-colors duration-300;
   }
 }
 
