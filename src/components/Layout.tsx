@@ -29,71 +29,93 @@ export const Layout: React.FC<LayoutProps> = ({
   ];
 
   return (
-    <div className={cn("min-h-screen flex", isDarkMode ? "dark bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900")}>
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white dark:bg-slate-900 shadow-sm transition-colors duration-300">
-        <div className="p-6">
-          <h1 className="text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400">CADERNETA ON</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest font-semibold">Painel de Controle</p>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-1">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onViewChange(item.id)}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                activeView === item.id
-                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              )}
-            >
-              <item.icon size={18} />
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
-          <button
-            onClick={toggleDarkMode}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
-          >
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            {isDarkMode ? 'Modo Claro' : 'Modo Escuro'}
-          </button>
-
-          <div className="flex items-center gap-3 px-4 py-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-xs text-center">
-              {user?.displayName?.charAt(0) || '?'}
+    <div className={cn("min-h-screen flex flex-col", isDarkMode ? "dark bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900")}>
+      {/* Top Navigation */}
+      <header className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-md transition-colors duration-300">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex flex-col">
+              <h1 className="text-lg font-bold tracking-tight text-blue-600 dark:text-blue-400 leading-none">CADERNETA ON</h1>
+              <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mt-1">Professor</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold truncate">{user?.displayName || 'Professor'}</p>
-              <button
-                onClick={logout}
-                className="text-[10px] text-red-500 hover:text-red-600 font-bold flex items-center gap-1 uppercase tracking-tighter"
-              >
-                <LogOut size={10} /> Sair
-              </button>
+
+            <nav className="hidden md:flex items-center gap-1">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => onViewChange(item.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200",
+                    activeView === item.id
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  )}
+                >
+                  <item.icon size={16} />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex flex-col items-end mr-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Sincronizado</span>
+              </div>
+            </div>
+
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              title={isDarkMode ? 'Modo Claro' : 'Modo Escuro'}
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2" />
+
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block text-right">
+                <p className="text-xs font-bold truncate leading-none mb-1">{user?.displayName || 'Professor'}</p>
+                <button
+                  onClick={logout}
+                  className="text-[9px] text-red-500 hover:text-red-600 font-black flex items-center gap-1 uppercase tracking-tighter"
+                >
+                  <LogOut size={10} /> Sair
+                </button>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-700 dark:text-blue-400 font-black text-sm border-2 border-blue-600/20">
+                {user?.displayName?.charAt(0) || '?'}
+              </div>
             </div>
           </div>
         </div>
-      </aside>
+      </header>
+
+      {/* Secondary Mobile Nav */}
+      <nav className="md:hidden flex items-center justify-around bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onViewChange(item.id)}
+            className={cn(
+              "flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold transition-all",
+              activeView === item.id
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-slate-500 dark:text-slate-500"
+            )}
+          >
+            <item.icon size={16} />
+            {item.label}
+          </button>
+        ))}
+      </nav>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md flex items-center px-8 justify-between z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sincronizado em tempo real</span>
-          </div>
-          <div className="text-xs font-medium text-slate-400 dark:text-slate-500">
-            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </div>
-        </header>
-        
-        <div className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
           {children}
         </div>
       </main>

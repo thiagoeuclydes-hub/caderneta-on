@@ -268,16 +268,16 @@ export const AttendanceView: React.FC = () => {
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-30">
               <tr className="bg-[#0c1e26]">
-                <th className="p-4 text-left border-r border-teal-900/50 min-w-[240px] sticky left-0 z-40 bg-[#0c1e26]">
+                <th className="p-4 text-left border-r border-teal-900/50 min-w-[200px] sticky left-0 z-40 bg-[#0c1e26]">
                   <span className="text-xs font-black text-teal-500 uppercase tracking-widest">ALUNOS</span>
                 </th>
                 {activeColumns.map(col => {
                   const [d, l] = col.split('|');
                   return (
-                    <th key={col} className="p-2 border-r border-teal-900/50 min-w-[70px]">
-                      <div className="flex flex-col items-center">
-                        <span className="text-[10px] font-black text-teal-400">{l.replace(/\D/g, '')}º</span>
-                        <span className="text-[10px] font-black text-white">{format(new Date(d + 'T12:00:00'), 'dd/MM')}</span>
+                    <th key={col} className="px-1 py-2 border-r border-teal-900/50 min-w-[42px]">
+                      <div className="flex flex-col items-center leading-tight">
+                        <span className="text-[9px] font-black text-teal-400">{l.replace(/\D/g, '')}º</span>
+                        <span className="text-[9px] font-black text-white">{format(new Date(d + 'T12:00:00'), 'dd/MM')}</span>
                       </div>
                     </th>
                   );
@@ -290,20 +290,20 @@ export const AttendanceView: React.FC = () => {
               <tr className="bg-[#0c1e26]/50">
                 <th className="border-r border-teal-900/50 sticky left-0 z-40 bg-[#0c1e26]"></th>
                 {activeColumns.map(col => (
-                  <th key={`tools-${col}`} className="p-1 border-r border-teal-900/50">
-                    <div className="flex gap-1">
+                  <th key={`tools-${col}`} className="p-0.5 border-r border-teal-900/50">
+                    <div className="flex flex-col gap-0.5">
                       <button
                         onClick={() => markAllColumn(col.split('|')[0], col.split('|')[1])}
-                        className="flex-1 py-0.5 bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-slate-950 text-[8px] font-black rounded border border-teal-500/20 transition-all"
+                        className="w-full py-0.5 bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-slate-950 text-[7px] font-black rounded-[2px] border border-teal-500/20 transition-all"
                       >
                         ALL
                       </button>
                       <button
                         onClick={() => setColumnToDelete(col)}
-                        className="px-1 py-0.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[8px] font-black rounded border border-red-500/20 transition-all"
+                        className="w-full py-0.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[7px] font-black rounded-[2px] border border-red-500/20 transition-all flex items-center justify-center"
                         title="Apagar dia"
                       >
-                        <X size={12} strokeWidth={4} />
+                        <X size={10} strokeWidth={4} />
                       </button>
                     </div>
                   </th>
@@ -326,11 +326,11 @@ export const AttendanceView: React.FC = () => {
                       if (status === 'F') totalFaltas++;
 
                       return (
-                        <td key={col} className="p-1 border-r border-teal-900/10">
+                        <td key={col} className="p-0.5 border-r border-teal-900/10">
                           <button
                             onClick={() => toggleAttendance(student.id, d, l)}
                             className={cn(
-                              "w-full h-8 rounded text-[11px] font-black transition-all border",
+                              "w-full h-6 rounded-[2px] text-[10px] font-black transition-all border",
                               status === 'P' ? "bg-emerald-600 border-emerald-500 text-white" :
                               status === 'F' ? "bg-red-600 border-red-500 text-white" :
                               "bg-slate-900/50 border-teal-900/30 text-transparent"
