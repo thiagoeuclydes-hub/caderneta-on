@@ -15,6 +15,7 @@ export const AttendanceView: React.FC = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [lessonsList, setLessonsList] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedBimester, setSelectedBimester] = useState('1º');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -64,9 +65,20 @@ export const AttendanceView: React.FC = () => {
       setAttendance(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, (error) => handleFirestoreError(error, OperationType.LIST, `attendance (classId: ${selectedClassId}, bimester: ${selectedBimester})`));
 
+    const qL = query(
+      collection(db, 'lessons'),
+      where('classId', '==', selectedClassId),
+      where('bimester', '==', selectedBimester),
+      where('ownerId', '==', user.uid)
+    );
+    const unsubL = onSnapshot(qL, (snap) => {
+      setLessonsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, `lessons (classId: ${selectedClassId}, bimester: ${selectedBimester})`));
+
     return () => {
       unsubS();
       unsubA();
+      unsubL();
     };
   }, [selectedClassId, selectedBimester, user, classes]);
 
@@ -92,6 +104,19 @@ export const AttendanceView: React.FC = () => {
           });
         }
       } else {
+        // Ensure lesson exists
+        const lessonExists = lessonsList.some(l => l.date === date && l.lesson === lesson);
+        if (!lessonExists) {
+          await addDoc(collection(db, 'lessons'), {
+            classId: selectedClassId,
+            date,
+            lesson,
+            bimester: selectedBimester,
+            ownerId: user.uid,
+            createdAt: serverTimestamp()
+          });
+        }
+
         await addDoc(collection(db, 'attendance'), {
           studentId,
           classId: selectedClassId,
@@ -112,26 +137,59 @@ export const AttendanceView: React.FC = () => {
     if (!user || !selectedClassId || students.length === 0) return;
     setLoading(true);
     try {
+      // Determine next status based on the first student's current status
+      const firstStudent = students[0];
+      const firstRecord = attendance.find(a => a.studentId === firstStudent.id && a.date === date && a.lesson === lesson);
+      
+      let targetStatus: 'P' | 'F' | '' = 'P';
+      if (firstRecord?.status === 'P') targetStatus = 'F';
+      else if (firstRecord?.status === 'F') targetStatus = '';
+      else targetStatus = 'P';
+
       const batch = writeBatch(db);
+      
+      // Ensure lesson exists
+      const lessonExists = lessonsList.some(l => l.date === date && l.lesson === lesson);
+      if (!lessonExists) {
+        const lessonRef = doc(collection(db, 'lessons'));
+        batch.set(lessonRef, {
+          classId: selectedClassId,
+          date,
+          lesson,
+          bimester: selectedBimester,
+          ownerId: user.uid,
+          createdAt: serverTimestamp()
+        });
+      }
+
       for (const student of students) {
         const existing = attendance.find(a => a.studentId === student.id && a.date === date && a.lesson === lesson);
-        if (!existing) {
-          const newDocRef = doc(collection(db, 'attendance'));
-          batch.set(newDocRef, {
-            studentId: student.id,
-            classId: selectedClassId,
-            date,
-            lesson,
-            status: 'P',
-            bimester: selectedBimester,
-            ownerId: user.uid,
-            updatedAt: serverTimestamp()
-          });
-        } else if (existing.status !== 'P') {
-          batch.update(doc(db, 'attendance', existing.id), {
-            status: 'P',
-            updatedAt: serverTimestamp()
-          });
+        
+        if (targetStatus === '') {
+          // Cycle to Vazio (Delete attendance records but KEEP lesson column)
+          if (existing) {
+            batch.delete(doc(db, 'attendance', existing.id));
+          }
+        } else {
+          // Cycle to P or F
+          if (!existing) {
+            const newDocRef = doc(collection(db, 'attendance'));
+            batch.set(newDocRef, {
+              studentId: student.id,
+              classId: selectedClassId,
+              date,
+              lesson,
+              status: targetStatus,
+              bimester: selectedBimester,
+              ownerId: user.uid,
+              updatedAt: serverTimestamp()
+            });
+          } else {
+            batch.update(doc(db, 'attendance', existing.id), {
+              status: targetStatus,
+              updatedAt: serverTimestamp()
+            });
+          }
         }
       }
       await batch.commit();
@@ -165,15 +223,28 @@ export const AttendanceView: React.FC = () => {
     const [date, lesson] = columnToDelete.split('|');
     setLoading(true);
     try {
-      const q = query(
+      // 1. Delete all attendance records
+      const qA = query(
         collection(db, 'attendance'),
         where('classId', '==', selectedClassId),
         where('ownerId', '==', user.uid),
         where('date', '==', date),
         where('lesson', '==', lesson)
       );
-      const snap = await getDocs(q);
-      const deletePromises = snap.docs.map(d => deleteDoc(d.ref));
+      const snapA = await getDocs(qA);
+      const deletePromises = snapA.docs.map(d => deleteDoc(d.ref));
+      
+      // 2. Delete the lesson record
+      const qL = query(
+        collection(db, 'lessons'),
+        where('classId', '==', selectedClassId),
+        where('ownerId', '==', user.uid),
+        where('date', '==', date),
+        where('lesson', '==', lesson)
+      );
+      const snapL = await getDocs(qL);
+      deletePromises.push(...snapL.docs.map(d => deleteDoc(d.ref)));
+
       await Promise.all(deletePromises);
       setColumnToDelete(null);
     } catch (error) {
@@ -186,7 +257,13 @@ export const AttendanceView: React.FC = () => {
   const bimesters = ['1º', '2º', '3º', '4º'];
   const lessons = ['1ª Aula', '2ª Aula', '3ª Aula', '4ª Aula'];
 
-  const activeColumns = Array.from(new Set(attendance.map(a => `${a.date}|${a.lesson}`))).sort();
+  // Combine lessons from the new collection and existing records (for backward compatibility)
+  const allColumnKeys = Array.from(new Set([
+    ...lessonsList.map(l => `${l.date}|${l.lesson}`),
+    ...attendance.map(a => `${a.date}|${a.lesson}`)
+  ])).sort();
+
+  const activeColumns = allColumnKeys;
   
   const currentClass = classes.find(c => c.id === selectedClassId);
 

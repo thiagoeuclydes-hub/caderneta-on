@@ -15,6 +15,7 @@ export const ActivitiesView: React.FC = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+  const [activityColumnsList, setActivityColumnsList] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedBimester, setSelectedBimester] = useState('1º');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -53,9 +54,20 @@ export const ActivitiesView: React.FC = () => {
       setActivities(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, (error) => handleFirestoreError(error, OperationType.LIST, `activities (classId: ${selectedClassId}, bimester: ${selectedBimester})`));
 
+    const qC = query(
+      collection(db, 'activity_columns'),
+      where('classId', '==', selectedClassId),
+      where('bimester', '==', selectedBimester),
+      where('ownerId', '==', user.uid)
+    );
+    const unsubC = onSnapshot(qC, (snap) => {
+      setActivityColumnsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, `activity_columns (classId: ${selectedClassId}, bimester: ${selectedBimester})`));
+
     return () => {
       unsubS();
       unsubA();
+      unsubC();
     };
   }, [selectedClassId, selectedBimester, user]);
 
@@ -82,6 +94,19 @@ export const ActivitiesView: React.FC = () => {
           });
         }
       } else {
+        // Ensure column exists
+        const columnExists = activityColumnsList.some(c => c.date === date && c.description === desc);
+        if (!columnExists) {
+          await addDoc(collection(db, 'activity_columns'), {
+            classId: selectedClassId,
+            date,
+            description: desc,
+            bimester: selectedBimester,
+            ownerId: user.uid,
+            createdAt: serverTimestamp()
+          });
+        }
+
         await addDoc(collection(db, 'activities'), {
           studentId,
           classId: selectedClassId,
@@ -103,6 +128,21 @@ export const ActivitiesView: React.FC = () => {
     setLoading(true);
     try {
       const batch = writeBatch(db);
+
+      // Ensure column exists
+      const columnExists = activityColumnsList.some(c => c.date === date && c.description === desc);
+      if (!columnExists) {
+        const colRef = doc(collection(db, 'activity_columns'));
+        batch.set(colRef, {
+          classId: selectedClassId,
+          date,
+          description: desc,
+          bimester: selectedBimester,
+          ownerId: user.uid,
+          createdAt: serverTimestamp()
+        });
+      }
+
       for (const student of students) {
         const existing = activities.find(a => a.studentId === student.id && a.date === date && a.description === desc);
         if (!existing) {
@@ -134,7 +174,12 @@ export const ActivitiesView: React.FC = () => {
 
   const bimesters = ['1º', '2º', '3º', '4º'];
 
-  const activeColumns = Array.from(new Set(activities.map(a => `${a.date}|${a.description}`))).sort();
+  const allColumnKeys = Array.from(new Set([
+    ...activityColumnsList.map(c => `${c.date}|${c.description}`),
+    ...activities.map(a => `${a.date}|${a.description}`)
+  ])).sort();
+
+  const activeColumns = allColumnKeys;
   
   const [loading, setLoading] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null);
@@ -146,15 +191,28 @@ export const ActivitiesView: React.FC = () => {
     const [date, desc] = columnToDelete.split('|');
     setLoading(true);
     try {
-      const q = query(
+      // 1. Delete all activity records
+      const qA = query(
         collection(db, 'activities'),
         where('classId', '==', selectedClassId),
         where('ownerId', '==', user.uid),
         where('date', '==', date),
         where('description', '==', desc)
       );
-      const snap = await getDocs(q);
-      const deletePromises = snap.docs.map(d => deleteDoc(d.ref));
+      const snapA = await getDocs(qA);
+      const deletePromises = snapA.docs.map(d => deleteDoc(d.ref));
+
+      // 2. Delete the column record
+      const qC = query(
+        collection(db, 'activity_columns'),
+        where('classId', '==', selectedClassId),
+        where('ownerId', '==', user.uid),
+        where('date', '==', date),
+        where('description', '==', desc)
+      );
+      const snapC = await getDocs(qC);
+      deletePromises.push(...snapC.docs.map(d => deleteDoc(d.ref)));
+
       await Promise.all(deletePromises);
       setColumnToDelete(null);
     } catch (error) {
