@@ -23,6 +23,9 @@ export const SettingsView: React.FC = () => {
   const [editSerie, setEditSerie] = useState('');
   const [editName, setEditName] = useState('');
 
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [editStudentName, setEditStudentName] = useState('');
+
   useEffect(() => {
     if (!user) return;
 
@@ -171,6 +174,27 @@ export const SettingsView: React.FC = () => {
     }
   };
 
+  const handleStartEditStudent = (student: any) => {
+    setEditingStudent(student);
+    setEditStudentName(student.name);
+  };
+
+  const handleSaveEditStudent = async () => {
+    if (!editingStudent || !editStudentName.trim()) return;
+    setLoading(true);
+    try {
+      await updateDoc(doc(db, 'students', editingStudent.id), {
+        name: editStudentName.trim()
+      });
+      setEditingStudent(null);
+    } catch (err) {
+      console.error('Erro ao editar aluno:', err);
+      handleFirestoreError(err, OperationType.UPDATE, 'students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col gap-1">
@@ -304,14 +328,24 @@ export const SettingsView: React.FC = () => {
                 <div className="p-4 max-h-60 overflow-y-auto">
                   <div className="space-y-2">
                     {students.filter(s => s.classId === c.id).sort((a, b) => a.name.localeCompare(b.name)).map(s => (
-                      <div key={s.id} className="flex justify-between items-center group">
+                      <div key={s.id} className="flex justify-between items-center group py-1 border-b border-slate-100 dark:border-slate-800/50 last:border-0">
                         <span className="text-sm text-slate-600 dark:text-slate-300">{s.name}</span>
-                        <button
-                          onClick={() => setDeletingStudent(s)}
-                          className="p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() => handleStartEditStudent(s)}
+                            className="p-1 text-slate-300 hover:text-blue-500 transition-colors"
+                            title="Editar Aluno"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          <button
+                            onClick={() => setDeletingStudent(s)}
+                            className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                            title="Excluir Aluno"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {students.filter(s => s.classId === c.id).length === 0 && (
@@ -427,6 +461,59 @@ export const SettingsView: React.FC = () => {
                 >
                   {loading ? 'Excluindo...' : 'Sim, Excluir'}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Student Modal */}
+      <AnimatePresence>
+        {editingStudent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-200 dark:border-slate-800"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-xl font-bold">Editar Aluno</h3>
+                  <p className="text-sm text-slate-500">Altere o nome do aluno selecionado.</p>
+                </div>
+                <button onClick={() => setEditingStudent(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 block">Nome do Aluno</label>
+                  <input
+                    type="text"
+                    value={editStudentName}
+                    onChange={(e) => setEditStudentName(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    placeholder="Nome completo do aluno"
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setEditingStudent(null)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSaveEditStudent}
+                    disabled={loading || !editStudentName.trim()}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                  >
+                    <Save size={18} /> Salvar
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
